@@ -297,7 +297,6 @@ const FR_CATEGORIES = {
     "champagne",
     "vin",
     "biere",
-    "bière",
     "sake",
     "absinthe",
     "amaretto",
@@ -318,13 +317,11 @@ const FR_CATEGORIES = {
     "myrtille",
     "cerise",
     "peche",
-    "pêche",
     "mangue",
     "banane",
     "pomme",
     "poire",
     "pasteque",
-    "pastèque",
     "melon",
     "kiwi",
     "passion",
@@ -332,7 +329,6 @@ const FR_CATEGORIES = {
     "jus de fruit de la passion",
     "sirop de fruit de la passion",
     "puree de fruit de la passion",
-    "purée de fruit de la passion",
     "maracuja",
     "passoa",
   ]),
@@ -351,22 +347,17 @@ const FR_CATEGORIES = {
 const SUFFIXES = {
   fruit: ["", " juice", " syrup", " puree"],
   citrus: ["", " juice", " peel", " zest"],
-  alcohol: [""],
-  herb: [""],
-  other: [""],
 };
 
 const CITRUS_EN = new Set(["lemon", "lime", "orange", "grapefruit"]);
 
-function passionVariantsEn() {
-  return [
-    "passion fruit",
-    "passion fruit juice",
-    "passion fruit syrup",
-    "passion fruit puree",
-    "passionfruit",
-  ];
-}
+const PASSION_VARIANTS_EN = [
+  "passion fruit",
+  "passion fruit juice",
+  "passion fruit syrup",
+  "passion fruit puree",
+  "passionfruit",
+];
 
 function guessCategoryFromUserInput(frInput) {
   const n = normalizeIngredientText(frInput);
@@ -408,12 +399,6 @@ function buildVariantsEn(baseEn, category) {
     SUFFIXES.citrus.forEach((s) => variants.add(base + s));
   } else if (category === "fruit") {
     SUFFIXES.fruit.forEach((s) => variants.add(base + s));
-  } else if (category === "alcohol") {
-    SUFFIXES.alcohol.forEach((s) => variants.add(base + s));
-  } else if (category === "herb") {
-    SUFFIXES.herb.forEach((s) => variants.add(base + s));
-  } else {
-    SUFFIXES.other.forEach((s) => variants.add(base + s));
   }
 
   return Array.from(variants)
@@ -425,12 +410,8 @@ function getIngredientCandidatesEn(userInput) {
   const normalized = normalizeIngredientText(userInput);
 
   // pack passion
-  if (
-    normalized.includes("passion") ||
-    normalized.includes("fruit de la passion") ||
-    normalized.includes("maracuja")
-  ) {
-    return passionVariantsEn();
+  if (normalized.includes("passion") || normalized.includes("maracuja")) {
+    return PASSION_VARIANTS_EN;
   }
 
   const category = guessCategoryFromUserInput(userInput);
@@ -1177,51 +1158,7 @@ router.get("/:id", async (req, res) => {
       });
     }
 
-    const drink = data.drinks[0];
-
-    const ingredients = [];
-    for (let i = 1; i <= 15; i++) {
-      const ingredient = drink[`strIngredient${i}`];
-      const measure = drink[`strMeasure${i}`];
-
-      if (ingredient && ingredient.trim() !== "") {
-        ingredients.push({
-          nom: translateIngredientToFr(ingredient.trim()),
-          nomOriginal: ingredient.trim(),
-          quantite: getQuantityFr(measure, ingredient),
-        });
-      }
-    }
-
-    const typeVerre = drink.strGlass || "Verre non spécifié";
-    const categorie = drink.strCategory || "Non catégorisé";
-    const alcoolise =
-      drink.strAlcoholic === "Alcoholic"
-        ? "Alcoolisé"
-        : drink.strAlcoholic === "Non alcoholic"
-          ? "Sans alcool"
-          : "Optionnel";
-
-    const instructions =
-      drink.strInstructionsFR ||
-      drink.strInstructions ||
-      "Instructions non disponibles";
-
-    res.json({
-      ok: true,
-      cocktail: {
-        id: drink.idDrink,
-        nom: drink.strDrink,
-        nomAlternatif: drink.strDrinkAlternate || null,
-        categorie: categorie,
-        type: alcoolise,
-        verre: typeVerre,
-        image: drink.strDrinkThumb,
-        instructions: instructions,
-        ingredients: ingredients,
-        tags: drink.strTags ? drink.strTags.split(",") : [],
-      },
-    });
+    res.json({ ok: true, cocktail: mapDrinkToCocktail(data.drinks[0]) });
   } catch (error) {
     console.error("Erreur dans la route /:id:", error);
     res.status(500).json({

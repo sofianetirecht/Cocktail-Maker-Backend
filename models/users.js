@@ -11,10 +11,10 @@ const favoriteSchema = mongoose.Schema(
 );
 
 const userSchema = mongoose.Schema({
-  username: { type: String, required: true, unique: true, trim: true },
-  email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-  password: { type: String, required: true },
-  token: { type: String, required: true },
+  username: { type: String, required: true, unique: true, trim: true, minlength: 4, maxlength: 50 },
+  email: { type: String, required: true, unique: true, lowercase: true, trim: true, maxlength: 254 },
+  password: { type: String, required: true, select: false },
+  token: { type: String, required: true, index: true },
   favorites: [favoriteSchema],
 });
 

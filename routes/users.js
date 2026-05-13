@@ -2,12 +2,21 @@ var express = require("express");
 var router = express.Router();
 const bcrypt = require("bcrypt");
 const uid2 = require("uid2");
+const rateLimit = require("express-rate-limit");
 
 const User = require("../models/users");
 const Recipe = require("../models/recipes");
 const auth = require("../middleware/auth");
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { ok: false, error: "Trop de tentatives. Réessaie dans 15 minutes." },
+});
 
 function checkBody(body, fields) {
   return fields.every(
@@ -21,7 +30,7 @@ function checkBody(body, fields) {
  * -----------------------------
  */
 
-router.post("/signup", async (req, res) => {
+router.post("/signup", authLimiter, async (req, res) => {
   try {
     if (!checkBody(req.body, ["username", "email", "password"])) {
       return res
@@ -31,8 +40,16 @@ router.post("/signup", async (req, res) => {
 
     const { username, email, password } = req.body;
 
+    if (username.trim().length < 4) {
+      return res.status(400).json({ ok: false, error: "4 caractères minimum" });
+    }
+
     if (!EMAIL_REGEX.test(email)) {
       return res.status(400).json({ ok: false, error: "Email invalide" });
+    }
+
+    if (password.length < 5) {
+      return res.status(400).json({ ok: false, error: "Mot de passe trop court (5 caractères min.)" });
     }
 
     const existing = await User.findOne({
@@ -45,7 +62,7 @@ router.post("/signup", async (req, res) => {
         .json({ ok: false, error: "Utilisateur déjà existant" });
     }
 
-    const hash = bcrypt.hashSync(password, 10);
+    const hash = await bcrypt.hash(password, 10);
     const newUser = await new User({
       username,
       email,
@@ -65,7 +82,7 @@ router.post("/signup", async (req, res) => {
   }
 });
 
-router.post("/signin", async (req, res) => {
+router.post("/signin", authLimiter, async (req, res) => {
   try {
     if (!checkBody(req.body, ["email", "password"])) {
       return res
@@ -73,13 +90,16 @@ router.post("/signin", async (req, res) => {
         .json({ ok: false, error: "Champs manquants ou vides" });
     }
 
-    const user = await User.findOne({ email: req.body.email.toLowerCase() });
+    const user = await User.findOne({ email: req.body.email.toLowerCase() }).select("+password");
 
-    if (!user || !bcrypt.compareSync(req.body.password, user.password)) {
+    if (!user || !(await bcrypt.compare(req.body.password, user.password))) {
       return res
         .status(401)
         .json({ ok: false, error: "Identifiants invalides" });
     }
+
+    user.token = uid2(32);
+    await user.save();
 
     res.json({
       ok: true,
@@ -137,6 +157,10 @@ router.post("/favorites", auth, async (req, res) => {
     }
 
     const { idDrink, nom, image } = req.body;
+
+    if (req.user.favorites.length >= 500) {
+      return res.status(400).json({ ok: false, error: "Limite de 500 favoris atteinte" });
+    }
 
     if (req.user.favorites.some((f) => f.idDrink === idDrink)) {
       return res
@@ -199,9 +223,10 @@ router.post("/recipes", auth, async (req, res) => {
         .json({ ok: false, error: "Le nom de la recette est requis" });
     }
 
+    const { name, type, format, profile, glass, ice, ingredients, steps, garnish, tips, mocktailVariant } = req.body;
     const recipe = await new Recipe({
       user: req.user._id,
-      ...req.body,
+      name, type, format, profile, glass, ice, ingredients, steps, garnish, tips, mocktailVariant,
     }).save();
 
     res.json({ ok: true, recipe });
@@ -213,6 +238,10 @@ router.post("/recipes", auth, async (req, res) => {
 
 router.delete("/recipes/:id", auth, async (req, res) => {
   try {
+    if (!req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ ok: false, error: "ID invalide" });
+    }
+
     const result = await Recipe.deleteOne({
       _id: req.params.id,
       user: req.user._id,

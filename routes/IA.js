@@ -1,16 +1,25 @@
-require("dotenv").config();
 var express = require("express");
 var router = express.Router();
 const OpenAI = require("openai/index.js");
-// cocktail generé par ia
+const rateLimit = require("express-rate-limit");
+const auth = require("../middleware/auth");
+
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+const aiLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { ok: false, error: "Trop de requêtes IA. Réessaie dans une minute." },
+});
 
 // Helper: sécurise un peu l'entrée utilisateur
 function cleanText(s, max = 500) {
   return (s ?? "").toString().trim().slice(0, max);
 }
 
-router.post("/original-recipe", async (req, res) => {
+router.post("/original-recipe", auth, aiLimiter, async (req, res) => {
   try {
     const {
       tastes, // ex: "sucré, acidulé"
@@ -92,10 +101,10 @@ JSON attendu (strict):
     try {
       recipe = JSON.parse(content);
     } catch (e) {
+      console.error("Réponse IA non-JSON:", content);
       return res.status(500).json({
         ok: false,
-        error: "Réponse IA non-JSON (à ajuster).",
-        raw: content,
+        error: "Réponse IA invalide. Réessaie.",
       });
     }
 
