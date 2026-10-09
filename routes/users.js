@@ -4,11 +4,12 @@ const bcrypt = require("bcrypt");
 const uid2 = require("uid2");
 const rateLimit = require("express-rate-limit");
 
-const User = require("../models/users");
-const Recipe = require("../models/recipes");
+const supabase = require("../models/supabase");
 const auth = require("../middleware/auth");
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UNIQUE_VIOLATION = "23505";
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -22,6 +23,44 @@ function checkBody(body, fields) {
   return fields.every(
     (f) => body[f] !== undefined && body[f] !== null && body[f] !== "",
   );
+}
+
+function toTextArray(value) {
+  if (value === undefined || value === null) return [];
+  return (Array.isArray(value) ? value : [value]).map(String);
+}
+
+function toFavorite(row) {
+  return { idDrink: row.id_drink, nom: row.nom, image: row.image, addedAt: row.added_at };
+}
+
+function toRecipe(row) {
+  return {
+    _id: row.id,
+    user: row.user_id,
+    name: row.name,
+    type: row.type,
+    format: row.format,
+    profile: row.profile ?? [],
+    glass: row.glass,
+    ice: row.ice,
+    ingredients: row.ingredients ?? [],
+    steps: row.steps ?? [],
+    garnish: row.garnish,
+    tips: row.tips ?? [],
+    mocktailVariant: row.mocktail_variant,
+    createdAt: row.created_at,
+  };
+}
+
+async function getFavorites(userId) {
+  const { data, error } = await supabase
+    .from("favorites")
+    .select("id_drink, nom, image, added_at")
+    .eq("user_id", userId)
+    .order("added_at", { ascending: true });
+  if (error) throw error;
+  return data.map(toFavorite);
 }
 
 /**
@@ -52,24 +91,24 @@ router.post("/signup", authLimiter, async (req, res) => {
       return res.status(400).json({ ok: false, error: "Mot de passe trop court (5 caractères min.)" });
     }
 
-    const existing = await User.findOne({
-      $or: [{ email: email.toLowerCase() }, { username }],
-    });
+    const hash = await bcrypt.hash(password, 10);
+    const { data: newUser, error } = await supabase
+      .from("users")
+      .insert({
+        username: username.trim(),
+        email: email.trim().toLowerCase(),
+        password: hash,
+        token: uid2(32),
+      })
+      .select("token, username")
+      .single();
 
-    if (existing) {
+    if (error?.code === UNIQUE_VIOLATION) {
       return res
         .status(409)
         .json({ ok: false, error: "Utilisateur déjà existant" });
     }
-
-    const hash = await bcrypt.hash(password, 10);
-    const newUser = await new User({
-      username,
-      email,
-      password: hash,
-      token: uid2(32),
-      favorites: [],
-    }).save();
+    if (error) throw error;
 
     res.json({
       ok: true,
@@ -90,7 +129,12 @@ router.post("/signin", authLimiter, async (req, res) => {
         .json({ ok: false, error: "Champs manquants ou vides" });
     }
 
-    const user = await User.findOne({ email: req.body.email.toLowerCase() }).select("+password");
+    const { data: user, error } = await supabase
+      .from("users")
+      .select("id, username, password")
+      .eq("email", req.body.email.trim().toLowerCase())
+      .maybeSingle();
+    if (error) throw error;
 
     if (!user || !(await bcrypt.compare(req.body.password, user.password))) {
       return res
@@ -98,12 +142,16 @@ router.post("/signin", authLimiter, async (req, res) => {
         .json({ ok: false, error: "Identifiants invalides" });
     }
 
-    user.token = uid2(32);
-    await user.save();
+    const token = uid2(32);
+    const { error: updateError } = await supabase
+      .from("users")
+      .update({ token })
+      .eq("id", user.id);
+    if (updateError) throw updateError;
 
     res.json({
       ok: true,
-      token: user.token,
+      token,
       username: user.username,
     });
   } catch (error) {
@@ -118,21 +166,26 @@ router.post("/signin", authLimiter, async (req, res) => {
  * -----------------------------
  */
 
-router.get("/me", auth, (req, res) => {
-  res.json({
-    ok: true,
-    user: {
-      username: req.user.username,
-      email: req.user.email,
-      favorites: req.user.favorites,
-    },
-  });
+router.get("/me", auth, async (req, res) => {
+  try {
+    res.json({
+      ok: true,
+      user: {
+        username: req.user.username,
+        email: req.user.email,
+        favorites: await getFavorites(req.user.id),
+      },
+    });
+  } catch (error) {
+    console.error("Erreur GET /me:", error);
+    res.status(500).json({ ok: false, error: "Erreur interne du serveur" });
+  }
 });
 
 router.delete("/me", auth, async (req, res) => {
   try {
-    await Recipe.deleteMany({ user: req.user._id });
-    await User.deleteOne({ _id: req.user._id });
+    const { error } = await supabase.from("users").delete().eq("id", req.user.id);
+    if (error) throw error;
     res.json({ ok: true });
   } catch (error) {
     console.error("Erreur DELETE /me:", error);
@@ -146,8 +199,13 @@ router.delete("/me", auth, async (req, res) => {
  * -----------------------------
  */
 
-router.get("/favorites", auth, (req, res) => {
-  res.json({ ok: true, favorites: req.user.favorites });
+router.get("/favorites", auth, async (req, res) => {
+  try {
+    res.json({ ok: true, favorites: await getFavorites(req.user.id) });
+  } catch (error) {
+    console.error("Erreur favorites GET:", error);
+    res.status(500).json({ ok: false, error: "Erreur interne du serveur" });
+  }
 });
 
 router.post("/favorites", auth, async (req, res) => {
@@ -158,20 +216,28 @@ router.post("/favorites", auth, async (req, res) => {
 
     const { idDrink, nom, image } = req.body;
 
-    if (req.user.favorites.length >= 500) {
+    const { count, error: countError } = await supabase
+      .from("favorites")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", req.user.id);
+    if (countError) throw countError;
+
+    if (count >= 500) {
       return res.status(400).json({ ok: false, error: "Limite de 500 favoris atteinte" });
     }
 
-    if (req.user.favorites.some((f) => f.idDrink === idDrink)) {
+    const { error } = await supabase
+      .from("favorites")
+      .insert({ user_id: req.user.id, id_drink: String(idDrink), nom, image });
+
+    if (error?.code === UNIQUE_VIOLATION) {
       return res
         .status(409)
         .json({ ok: false, error: "Cocktail déjà en favori" });
     }
+    if (error) throw error;
 
-    req.user.favorites.push({ idDrink, nom, image });
-    await req.user.save();
-
-    res.json({ ok: true, favorites: req.user.favorites });
+    res.json({ ok: true, favorites: await getFavorites(req.user.id) });
   } catch (error) {
     console.error("Erreur favorites POST:", error);
     res.status(500).json({ ok: false, error: "Erreur interne du serveur" });
@@ -180,17 +246,19 @@ router.post("/favorites", auth, async (req, res) => {
 
 router.delete("/favorites/:idDrink", auth, async (req, res) => {
   try {
-    const before = req.user.favorites.length;
-    req.user.favorites = req.user.favorites.filter(
-      (f) => f.idDrink !== req.params.idDrink,
-    );
+    const { data: deleted, error } = await supabase
+      .from("favorites")
+      .delete()
+      .eq("user_id", req.user.id)
+      .eq("id_drink", req.params.idDrink)
+      .select("id_drink");
+    if (error) throw error;
 
-    if (req.user.favorites.length === before) {
+    if (deleted.length === 0) {
       return res.status(404).json({ ok: false, error: "Favori non trouvé" });
     }
 
-    await req.user.save();
-    res.json({ ok: true, favorites: req.user.favorites });
+    res.json({ ok: true, favorites: await getFavorites(req.user.id) });
   } catch (error) {
     console.error("Erreur favorites DELETE:", error);
     res.status(500).json({ ok: false, error: "Erreur interne du serveur" });
@@ -205,10 +273,13 @@ router.delete("/favorites/:idDrink", auth, async (req, res) => {
 
 router.get("/recipes", auth, async (req, res) => {
   try {
-    const recipes = await Recipe.find({ user: req.user._id }).sort({
-      createdAt: -1,
-    });
-    res.json({ ok: true, recipes });
+    const { data, error } = await supabase
+      .from("recipes")
+      .select("*")
+      .eq("user_id", req.user.id)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    res.json({ ok: true, recipes: data.map(toRecipe) });
   } catch (error) {
     console.error("Erreur recipes GET:", error);
     res.status(500).json({ ok: false, error: "Erreur interne du serveur" });
@@ -224,12 +295,27 @@ router.post("/recipes", auth, async (req, res) => {
     }
 
     const { name, type, format, profile, glass, ice, ingredients, steps, garnish, tips, mocktailVariant } = req.body;
-    const recipe = await new Recipe({
-      user: req.user._id,
-      name, type, format, profile, glass, ice, ingredients, steps, garnish, tips, mocktailVariant,
-    }).save();
+    const { data, error } = await supabase
+      .from("recipes")
+      .insert({
+        user_id: req.user.id,
+        name,
+        type,
+        format,
+        profile: toTextArray(profile),
+        glass,
+        ice,
+        ingredients: Array.isArray(ingredients) ? ingredients : [],
+        steps: toTextArray(steps),
+        garnish,
+        tips: toTextArray(tips),
+        mocktail_variant: mocktailVariant,
+      })
+      .select("*")
+      .single();
+    if (error) throw error;
 
-    res.json({ ok: true, recipe });
+    res.json({ ok: true, recipe: toRecipe(data) });
   } catch (error) {
     console.error("Erreur recipes POST:", error);
     res.status(500).json({ ok: false, error: "Erreur interne du serveur" });
@@ -238,16 +324,19 @@ router.post("/recipes", auth, async (req, res) => {
 
 router.delete("/recipes/:id", auth, async (req, res) => {
   try {
-    if (!req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
+    if (!UUID_REGEX.test(req.params.id)) {
       return res.status(400).json({ ok: false, error: "ID invalide" });
     }
 
-    const result = await Recipe.deleteOne({
-      _id: req.params.id,
-      user: req.user._id,
-    });
+    const { data: deleted, error } = await supabase
+      .from("recipes")
+      .delete()
+      .eq("id", req.params.id)
+      .eq("user_id", req.user.id)
+      .select("id");
+    if (error) throw error;
 
-    if (result.deletedCount === 0) {
+    if (deleted.length === 0) {
       return res.status(404).json({ ok: false, error: "Recette non trouvée" });
     }
 

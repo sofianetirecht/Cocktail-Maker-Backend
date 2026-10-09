@@ -1,5 +1,5 @@
 require("dotenv").config();
-require("./models/connection");
+require("./models/supabase");
 
 if (!process.env.OPENAI_API_KEY) {
   console.error("❌ OPENAI_API_KEY manquant dans .env");

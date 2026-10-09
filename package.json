@@ -7,13 +7,13 @@
     "dev": "nodemon ./bin/www"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.117.3",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "express-rate-limit": "^8.5.1",
     "helmet": "^8.1.0",
-    "mongoose": "^9.2.3",
     "morgan": "^1.10.1",
     "openai": "^6.25.0",
     "uid2": "^1.0.0"
