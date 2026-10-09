@@ -1,5 +1,7 @@
 var express = require("express");
 var router = express.Router();
+const translationsFr = require("../data/translationsFr");
+const { convertStandardMeasure } = require("../lib/measuresFr");
 
 /**
  * -----------------------------
@@ -415,9 +417,21 @@ function translateIngredient(ingredientFr) {
   return ingredientsFrToEnNormalized[normalized] || ingredientFr;
 }
 
+function normalizeKeys(dict) {
+  return Object.entries(dict).reduce((acc, [key, value]) => {
+    acc[normalizeIngredientText(key)] = value;
+    return acc;
+  }, {});
+}
+
+const ingredientsEnToFrNormalized = normalizeKeys({
+  ...translationsFr.ingredients,
+  ...ingredientsEnToFr,
+});
+
 function translateIngredientToFr(ingredientEn) {
   const key = normalizeIngredientText(ingredientEn);
-  return ingredientsEnToFr[key] || ingredientEn;
+  return ingredientsEnToFrNormalized[key] || ingredientEn;
 }
 
 const glassEnToFr = {
@@ -462,10 +476,35 @@ const glassEnToFr = {
   "double old fashioned glass": "Grand verre old-fashioned",
 };
 
+const glassEnToFrNormalized = normalizeKeys({ ...glassEnToFr, ...translationsFr.glasses });
+const categoriesFr = normalizeKeys(translationsFr.categories);
+const tagsFr = normalizeKeys(translationsFr.tags);
+const measuresFr = Object.entries(translationsFr.measures).reduce((acc, [key, value]) => {
+  acc[key.toLowerCase()] = value;
+  return acc;
+}, {});
+
 function translateGlass(glassEn) {
   if (!glassEn) return "Verre non spécifié";
   const key = normalizeIngredientText(glassEn);
-  return glassEnToFr[key] || glassEn;
+  return glassEnToFrNormalized[key] || glassEn;
+}
+
+function translateCategory(categoryEn) {
+  if (!categoryEn) return "Non catégorisé";
+  return categoriesFr[normalizeIngredientText(categoryEn)] || categoryEn;
+}
+
+function translateTags(rawTags) {
+  if (!rawTags) return [];
+  return [
+    ...new Set(
+      rawTags
+        .split(",")
+        .map((tag) => tagsFr[normalizeIngredientText(tag)])
+        .filter(Boolean),
+    ),
+  ];
 }
 
 const translationCache = new Map();
@@ -860,6 +899,10 @@ function getQuantityFr(measureRaw, ingredientEn) {
 
   // 1) si mesure existe
   if (measureRaw && measureRaw.trim() !== "") {
+    const raw = measureRaw.trim().replace(/\s+/g, " ");
+    const known = measuresFr[raw.toLowerCase()] || convertStandardMeasure(raw);
+    if (known) return known;
+
     const unitFr = convertUnitMeasureToFr(measureRaw);
     if (unitFr) return unitFr;
 
@@ -1026,7 +1069,7 @@ async function mapDrinkToCocktail(drink) {
   }
 
   const verre = translateGlass(drink.strGlass);
-  const categorie = drink.strCategory || "Non catégorisé";
+  const categorie = translateCategory(drink.strCategory);
   const alcoolise =
     drink.strAlcoholic === "Alcoholic"
       ? "Alcoolisé"
@@ -1053,7 +1096,7 @@ async function mapDrinkToCocktail(drink) {
     image: drink.strDrinkThumb,
     instructions,
     ingredients,
-    tags: drink.strTags ? drink.strTags.split(",") : [],
+    tags: translateTags(drink.strTags),
   };
 }
 
