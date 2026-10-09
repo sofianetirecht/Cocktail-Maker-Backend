@@ -20,9 +20,11 @@ const authLimiter = rateLimit({
 });
 
 function checkBody(body, fields) {
-  return fields.every(
-    (f) => body[f] !== undefined && body[f] !== null && body[f] !== "",
-  );
+  return fields.every((f) => typeof body[f] === "string" && body[f].trim() !== "");
+}
+
+function textOrNull(value) {
+  return typeof value === "string" ? value : null;
 }
 
 function toTextArray(value) {
@@ -210,11 +212,10 @@ router.get("/favorites", auth, async (req, res) => {
 
 router.post("/favorites", auth, async (req, res) => {
   try {
-    if (!checkBody(req.body, ["idDrink"])) {
+    const { idDrink, nom, image } = req.body;
+    if (!["string", "number"].includes(typeof idDrink) || String(idDrink).trim() === "") {
       return res.status(400).json({ ok: false, error: "idDrink requis" });
     }
-
-    const { idDrink, nom, image } = req.body;
 
     const { count, error: countError } = await supabase
       .from("favorites")
@@ -228,7 +229,7 @@ router.post("/favorites", auth, async (req, res) => {
 
     const { error } = await supabase
       .from("favorites")
-      .insert({ user_id: req.user.id, id_drink: String(idDrink), nom, image });
+      .insert({ user_id: req.user.id, id_drink: String(idDrink), nom: textOrNull(nom), image: textOrNull(image) });
 
     if (error?.code === UNIQUE_VIOLATION) {
       return res
@@ -288,28 +289,27 @@ router.get("/recipes", auth, async (req, res) => {
 
 router.post("/recipes", auth, async (req, res) => {
   try {
-    if (!checkBody(req.body, ["name"])) {
+    const { name, type, format, profile, glass, ice, ingredients, steps, garnish, tips, mocktailVariant } = req.body;
+    if (typeof name !== "string" || name.trim() === "") {
       return res
         .status(400)
         .json({ ok: false, error: "Le nom de la recette est requis" });
     }
-
-    const { name, type, format, profile, glass, ice, ingredients, steps, garnish, tips, mocktailVariant } = req.body;
     const { data, error } = await supabase
       .from("recipes")
       .insert({
         user_id: req.user.id,
-        name,
-        type,
-        format,
+        name: name.trim(),
+        type: textOrNull(type),
+        format: textOrNull(format),
         profile: toTextArray(profile),
-        glass,
-        ice,
+        glass: textOrNull(glass),
+        ice: textOrNull(ice),
         ingredients: Array.isArray(ingredients) ? ingredients : [],
         steps: toTextArray(steps),
-        garnish,
+        garnish: textOrNull(garnish),
         tips: toTextArray(tips),
-        mocktail_variant: mocktailVariant,
+        mocktail_variant: textOrNull(mocktailVariant),
       })
       .select("*")
       .single();

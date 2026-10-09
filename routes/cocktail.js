@@ -261,10 +261,10 @@ const ingredientsEnToFr = {
   curacao: "Curaçao",
   "orange curacao": "Curaçao orange",
   "creme de cacao": "Crème de cacao",
-  "white creme de cacao": "Crème de cacao blanc",
-  "dark creme de cacao": "Crème de cacao brun",
+  "white creme de cacao": "Crème de cacao blanche",
+  "dark creme de cacao": "Crème de cacao brune",
   "creme de menthe": "Crème de menthe",
-  "white creme de menthe": "Crème de menthe blanc",
+  "white creme de menthe": "Crème de menthe blanche",
   "green creme de menthe": "Crème de menthe verte",
   "peach schnapps": "Schnaps pêche",
   "butterscotch schnapps": "Schnaps caramel",
@@ -275,7 +275,7 @@ const ingredientsEnToFr = {
   "baileys irish cream": "Baileys",
   "irish whiskey": "Whisky irlandais",
   "rye whiskey": "Whisky de seigle",
-  "blended whiskey": "Whisky blended",
+  "blended whiskey": "Whisky d'assemblage",
   "canadian whisky": "Whisky canadien",
   "sweet vermouth": "Vermouth rouge",
   "dry vermouth": "Vermouth sec",
@@ -664,10 +664,13 @@ function buildVariantsEn(baseEn, category) {
   const base = normalizeIngredientText(baseEn);
   const variants = new Set();
 
+  const root = baseFromCompositeEn(base);
   variants.add(base);
-  variants.add(baseFromCompositeEn(base));
+  variants.add(root);
 
-  if (CITRUS_EN.has(base)) {
+  if (root !== base) {
+    // déjà composé (ex: "orange juice") : pas de suffixe supplémentaire
+  } else if (CITRUS_EN.has(base)) {
     SUFFIXES.citrus.forEach((s) => variants.add(base + s));
   } else if (category === "fruit") {
     SUFFIXES.fruit.forEach((s) => variants.add(base + s));
@@ -1053,6 +1056,19 @@ function parseExcludedIds(raw) {
   );
 }
 
+// Mots restés en anglais ou mal orthographiés dans les instructions FR de TheCocktailDB.
+const INSTRUCTION_FIXES = [
+  [/\bon the rocks\b/gi, "sur glace"],
+  [/\bclub soda\b/gi, "eau gazeuse"],
+  [/\bMarachino\b/g, "marasquin"],
+  [/\bmaraschino\b/gi, "marasquin"],
+  [/\bkirch\b/gi, "kirsch"],
+];
+
+function fixInstructionsFr(text) {
+  return INSTRUCTION_FIXES.reduce((acc, [re, fr]) => acc.replace(re, fr), text);
+}
+
 async function mapDrinkToCocktail(drink) {
   const ingredients = [];
   for (let i = 1; i <= 15; i++) {
@@ -1079,7 +1095,7 @@ async function mapDrinkToCocktail(drink) {
 
   let instructions;
   if (drink.strInstructionsFR) {
-    instructions = drink.strInstructionsFR;
+    instructions = fixInstructionsFr(drink.strInstructionsFR);
   } else if (drink.strInstructions) {
     instructions = await translateWithMyMemory(drink.strInstructions);
   } else {

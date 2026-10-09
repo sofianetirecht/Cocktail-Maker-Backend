@@ -45,6 +45,12 @@ app.use((req, res) => {
 });
 
 app.use((err, req, res, next) => {
+  if (err.type === "entity.too.large") {
+    return res.status(413).json({ ok: false, error: "Requête trop volumineuse" });
+  }
+  if (err.type === "entity.parse.failed") {
+    return res.status(400).json({ ok: false, error: "JSON invalide" });
+  }
   console.error(err);
   res.status(err.status || 500).json({ ok: false, error: "Erreur interne du serveur" });
 });
