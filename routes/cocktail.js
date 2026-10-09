@@ -223,6 +223,165 @@ const ingredientsEnToFr = {
   nutmeg: "Noix de muscade",
   angostura: "Angostura",
   bitters: "Bitters",
+
+  // Spiritueux supplémentaires
+  aperol: "Aperol",
+  campari: "Campari",
+  prosecco: "Prosecco",
+  mezcal: "Mezcal",
+  cachaca: "Cachaça",
+  pisco: "Pisco",
+  port: "Porto",
+  "port wine": "Porto",
+  "white port": "Porto blanc",
+  malibu: "Malibu",
+  galliano: "Galliano",
+  sambuca: "Sambuca",
+  limoncello: "Limoncello",
+  frangelico: "Frangelico",
+  drambuie: "Drambuie",
+  chartreuse: "Chartreuse",
+  "green chartreuse": "Chartreuse verte",
+  "yellow chartreuse": "Chartreuse jaune",
+  benedictine: "Bénédictine",
+  chambord: "Chambord",
+  "chambord raspberry liqueur": "Chambord",
+  midori: "Midori",
+  "midori melon liqueur": "Midori",
+  "sloe gin": "Gin de prunelle",
+  "elderflower liqueur": "Liqueur de fleur de sureau",
+  "st-germain": "St-Germain",
+  "st germain": "St-Germain",
+  "raspberry liqueur": "Liqueur de framboise",
+  "peach liqueur": "Liqueur de pêche",
+  "maraschino liqueur": "Marasquin",
+  "blue curacao": "Curaçao bleu",
+  curacao: "Curaçao",
+  "orange curacao": "Curaçao orange",
+  "creme de cacao": "Crème de cacao",
+  "white creme de cacao": "Crème de cacao blanc",
+  "dark creme de cacao": "Crème de cacao brun",
+  "creme de menthe": "Crème de menthe",
+  "white creme de menthe": "Crème de menthe blanc",
+  "green creme de menthe": "Crème de menthe verte",
+  "peach schnapps": "Schnaps pêche",
+  "butterscotch schnapps": "Schnaps caramel",
+  "peppermint schnapps": "Schnaps menthe",
+  schnapps: "Schnaps",
+  "coffee liqueur": "Liqueur de café",
+  "irish cream": "Crème irlandaise",
+  "baileys irish cream": "Baileys",
+  "irish whiskey": "Whisky irlandais",
+  "rye whiskey": "Whisky de seigle",
+  "blended whiskey": "Whisky blended",
+  "canadian whisky": "Whisky canadien",
+  "sweet vermouth": "Vermouth rouge",
+  "dry vermouth": "Vermouth sec",
+  "extra dry vermouth": "Vermouth extra-sec",
+  "white rum": "Rhum blanc",
+  "gold rum": "Rhum doré",
+  "coconut rum": "Rhum coco",
+  "aged rum": "Rhum vieilli",
+  "overproof rum": "Rhum fort",
+  "silver rum": "Rhum blanc",
+  "anejo rum": "Rhum añejo",
+  "151 proof rum": "Rhum 151",
+  "sparkling wine": "Vin mousseux",
+  cava: "Cava",
+
+  // Mixeurs
+  "ginger beer": "Bière de gingembre",
+  "ginger ale": "Ginger ale",
+  "club soda": "Eau gazeuse",
+  "lemon-lime soda": "Soda citron-lime",
+  sprite: "Sprite",
+  "7-up": "7-Up",
+  "coca-cola": "Coca-Cola",
+  coke: "Coca-Cola",
+  "energy drink": "Boisson énergétique",
+  "red bull": "Red Bull",
+  "apple cider": "Cidre",
+  cider: "Cidre",
+  tea: "Thé",
+  "green tea": "Thé vert",
+  "iced tea": "Thé glacé",
+
+  // Jus supplémentaires
+  "pomegranate juice": "Jus de grenade",
+  "mango juice": "Jus de mangue",
+  "peach juice": "Jus de pêche",
+  "apricot juice": "Jus d'abricot",
+
+  // Sirops & sucrants
+  grenadine: "Grenadine",
+  "orgeat syrup": "Sirop d'orgeat",
+  orgeat: "Sirop d'orgeat",
+  "agave syrup": "Sirop d'agave",
+  "agave nectar": "Nectar d'agave",
+  "maple syrup": "Sirop d'érable",
+  "rose syrup": "Sirop de rose",
+  "raspberry syrup": "Sirop de framboise",
+  "strawberry syrup": "Sirop de fraise",
+  "vanilla syrup": "Sirop de vanille",
+  "caramel syrup": "Sirop de caramel",
+  "hazelnut syrup": "Sirop de noisette",
+  falernum: "Falernum",
+  "elderflower cordial": "Cordial fleur de sureau",
+  "brown sugar": "Sucre roux",
+  "demerara sugar": "Sucre demerara",
+  "cane sugar": "Sucre de canne",
+
+  // Produits laitiers
+  "half and half": "Moitié lait moitié crème",
+  "light cream": "Crème légère",
+  "sour cream": "Crème fraîche",
+  "almond milk": "Lait d'amande",
+  "coconut milk": "Lait de coco",
+  "condensed milk": "Lait concentré",
+  "cream of coconut": "Crème de coco",
+
+  // Bitters
+  "angostura bitters": "Bitters Angostura",
+  "orange bitters": "Bitters orange",
+  "aromatic bitters": "Bitters aromatiques",
+  "peychaud bitters": "Bitters Peychaud's",
+
+  // Garnitures
+  "maraschino cherry": "Cerise au marasquin",
+  "lime wedge": "Quartier de citron vert",
+  "lemon wedge": "Quartier de citron",
+  "orange wedge": "Quartier d'orange",
+  "orange slice": "Tranche d'orange",
+  "lemon slice": "Tranche de citron",
+  "lime slice": "Tranche de citron vert",
+  "mint leaves": "Feuilles de menthe",
+  "mint sprig": "Brin de menthe",
+  "fresh mint": "Menthe fraîche",
+  "basil leaves": "Feuilles de basilic",
+  "fresh basil": "Basilic frais",
+
+  // Condiments & épices
+  "worcestershire sauce": "Sauce Worcestershire",
+  "tabasco sauce": "Tabasco",
+  tabasco: "Tabasco",
+  "hot sauce": "Sauce piquante",
+  celery: "Céleri",
+  "celery salt": "Sel de céleri",
+  horseradish: "Raifort",
+  "cayenne pepper": "Poivre de Cayenne",
+  cardamom: "Cardamome",
+  "star anise": "Anis étoilé",
+  anise: "Anis",
+
+  // Autres
+  "crushed ice": "Glace pilée",
+  "rose water": "Eau de rose",
+  "orange flower water": "Eau de fleur d'oranger",
+  almond: "Amande",
+  hazelnut: "Noisette",
+  "vanilla extract": "Extrait de vanille",
+  "sweet and sour mix": "Mélange aigre-doux",
+  "sour mix": "Mélange aigre-doux",
 };
 
 /**
@@ -259,6 +418,80 @@ function translateIngredient(ingredientFr) {
 function translateIngredientToFr(ingredientEn) {
   const key = normalizeIngredientText(ingredientEn);
   return ingredientsEnToFr[key] || ingredientEn;
+}
+
+const glassEnToFr = {
+  "highball glass": "Verre highball",
+  "cocktail glass": "Verre à cocktail",
+  "old-fashioned glass": "Verre old-fashioned",
+  "old fashioned glass": "Verre old-fashioned",
+  "rocks glass": "Verre old-fashioned",
+  "lowball glass": "Verre old-fashioned",
+  "collins glass": "Verre Collins",
+  "margarita glass": "Verre à margarita",
+  "margarita/coupette glass": "Verre à margarita",
+  "shot glass": "Verre à shot",
+  "beer mug": "Chope à bière",
+  "beer pilsner": "Verre à bière",
+  "beer glass": "Verre à bière",
+  "wine glass": "Verre à vin",
+  "red wine glass": "Verre à vin rouge",
+  "white wine glass": "Verre à vin blanc",
+  "champagne flute": "Flûte à champagne",
+  "champagne coupe": "Coupe à champagne",
+  "martini glass": "Verre à martini",
+  "pint glass": "Pinte",
+  "whiskey glass": "Verre à whisky",
+  "whisky glass": "Verre à whisky",
+  "hurricane glass": "Verre hurricane",
+  "copper mug": "Chope en cuivre",
+  "irish coffee cup": "Tasse à Irish coffee",
+  "coffee mug": "Mug à café",
+  "mason jar": "Bocal mason",
+  pitcher: "Carafe",
+  "punch bowl": "Bol à punch",
+  "parfait glass": "Verre à parfait",
+  "cordial glass": "Verre à cordial",
+  "brandy snifter": "Verre à cognac",
+  "nick and nora glass": "Verre Nick & Nora",
+  "coupe glass": "Coupe",
+  coupe: "Coupe",
+  "balloon glass": "Verre ballon",
+  goblet: "Calice",
+  "double old-fashioned glass": "Grand verre old-fashioned",
+  "double old fashioned glass": "Grand verre old-fashioned",
+};
+
+function translateGlass(glassEn) {
+  if (!glassEn) return "Verre non spécifié";
+  const key = normalizeIngredientText(glassEn);
+  return glassEnToFr[key] || glassEn;
+}
+
+const translationCache = new Map();
+
+async function translateWithMyMemory(text) {
+  if (!text || text.trim() === "") return text;
+  if (translationCache.has(text)) return translationCache.get(text);
+
+  try {
+    const email = process.env.MYMEMORY_EMAIL
+      ? `&de=${encodeURIComponent(process.env.MYMEMORY_EMAIL)}`
+      : "";
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|fr${email}`;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!res.ok) return text;
+    const data = await res.json();
+    if (data.responseStatus === 200 && data.responseData?.translatedText) {
+      const translated = data.responseData.translatedText;
+      translationCache.set(text, translated);
+      return translated;
+    }
+  } catch { /* timeout ou réseau : on garde l'anglais */ }
+  return text;
 }
 
 function cocktailContainsIngredient(drink, ingredientEn) {
@@ -777,7 +1010,7 @@ function parseExcludedIds(raw) {
   );
 }
 
-function mapDrinkToCocktail(drink) {
+async function mapDrinkToCocktail(drink) {
   const ingredients = [];
   for (let i = 1; i <= 15; i++) {
     const ingredient = drink[`strIngredient${i}`];
@@ -792,7 +1025,7 @@ function mapDrinkToCocktail(drink) {
     }
   }
 
-  const typeVerre = drink.strGlass || "Verre non spécifié";
+  const verre = translateGlass(drink.strGlass);
   const categorie = drink.strCategory || "Non catégorisé";
   const alcoolise =
     drink.strAlcoholic === "Alcoholic"
@@ -801,10 +1034,14 @@ function mapDrinkToCocktail(drink) {
         ? "Sans alcool"
         : "Optionnel";
 
-  const instructions =
-    drink.strInstructionsFR ||
-    drink.strInstructions ||
-    "Instructions non disponibles";
+  let instructions;
+  if (drink.strInstructionsFR) {
+    instructions = drink.strInstructionsFR;
+  } else if (drink.strInstructions) {
+    instructions = await translateWithMyMemory(drink.strInstructions);
+  } else {
+    instructions = "Instructions non disponibles";
+  }
 
   return {
     id: drink.idDrink,
@@ -812,7 +1049,7 @@ function mapDrinkToCocktail(drink) {
     nomAlternatif: drink.strDrinkAlternate || null,
     categorie,
     type: alcoolise,
-    verre: typeVerre,
+    verre,
     image: drink.strDrinkThumb,
     instructions,
     ingredients,
@@ -906,7 +1143,7 @@ router.get("/surprise", async (req, res) => {
 
     res.json({
       ok: true,
-      cocktail: mapDrinkToCocktail(drink),
+      cocktail: await mapDrinkToCocktail(drink),
     });
   } catch (error) {
     console.error("Erreur dans la route /surprise:", error);
@@ -940,7 +1177,7 @@ router.get("/surprise/batch", async (req, res) => {
       if (excludedIds.has(id)) continue;
 
       excludedIds.add(id);
-      cocktails.push(mapDrinkToCocktail(drink));
+      cocktails.push(await mapDrinkToCocktail(drink));
     }
 
     res.json({
@@ -1158,7 +1395,7 @@ router.get("/:id", async (req, res) => {
       });
     }
 
-    res.json({ ok: true, cocktail: mapDrinkToCocktail(data.drinks[0]) });
+    res.json({ ok: true, cocktail: await mapDrinkToCocktail(data.drinks[0]) });
   } catch (error) {
     console.error("Erreur dans la route /:id:", error);
     res.status(500).json({
