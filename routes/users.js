@@ -347,4 +347,79 @@ router.delete("/recipes/:id", auth, async (req, res) => {
   }
 });
 
+/**
+ * -----------------------------
+ *  VINS FAVORIS (auth requis)
+ * -----------------------------
+ */
+
+function toWine(row) {
+  return { _id: row.id, ...row.data, scanId: row.scan_id, createdAt: row.created_at };
+}
+
+router.get("/wines", auth, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from("wines")
+      .select("id, scan_id, data, created_at")
+      .eq("user_id", req.user.id)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    res.json({ ok: true, wines: data.map(toWine) });
+  } catch (error) {
+    console.error("Erreur wines GET:", error);
+    res.status(500).json({ ok: false, error: "Erreur interne du serveur" });
+  }
+});
+
+router.post("/wines", auth, async (req, res) => {
+  try {
+    const wine = req.body?.wine;
+    if (!wine || typeof wine !== "object" || !UUID_REGEX.test(String(wine.scanId)) || !wine.identity) {
+      return res.status(400).json({ ok: false, error: "Fiche vin invalide" });
+    }
+
+    const { _id, scanId, createdAt, ...data } = wine;
+    const { data: row, error } = await supabase
+      .from("wines")
+      .upsert(
+        { user_id: req.user.id, scan_id: scanId, data },
+        { onConflict: "user_id,scan_id" },
+      )
+      .select("id, scan_id, data, created_at")
+      .single();
+    if (error) throw error;
+
+    res.json({ ok: true, wine: toWine(row) });
+  } catch (error) {
+    console.error("Erreur wines POST:", error);
+    res.status(500).json({ ok: false, error: "Erreur interne du serveur" });
+  }
+});
+
+router.delete("/wines/:scanId", auth, async (req, res) => {
+  try {
+    if (!UUID_REGEX.test(req.params.scanId)) {
+      return res.status(400).json({ ok: false, error: "ID invalide" });
+    }
+
+    const { data: deleted, error } = await supabase
+      .from("wines")
+      .delete()
+      .eq("user_id", req.user.id)
+      .eq("scan_id", req.params.scanId)
+      .select("id");
+    if (error) throw error;
+
+    if (deleted.length === 0) {
+      return res.status(404).json({ ok: false, error: "Vin non trouvé" });
+    }
+
+    res.json({ ok: true });
+  } catch (error) {
+    console.error("Erreur wines DELETE:", error);
+    res.status(500).json({ ok: false, error: "Erreur interne du serveur" });
+  }
+});
+
 module.exports = router;
